@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сокращение ссылок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        #result {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #shortenedLink a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #shortenedLink a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Сокращение ссылок</h1>
+    <form id="shortenForm" action="/shorten" method="post">
+        <label for="url">Введите URL для сокращения:</label>
+        <input type="url" id="url" name="url" required>
+        <button type="submit">Сократить</button>
+        <div id="error" class="error"></div>
+    </form>
+    <div id="result">
+        <p id="shortenedLink">Сокращенная ссылка: <a href="" target="_blank"></a></p>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById("shortenForm");
+    const errorDiv = document.getElementById("error");
+    const shortenedLink = document.getElementById("shortenedLink");
+
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        errorDiv.textContent = '';  // Сброс сообщения об ошибке
+
+        const url = document.getElementById("url").value;
+        if (!isValidURL(url)) {
+            errorDiv.textContent = 'Введите корректный URL.';
+            return;
+        }
+
+        const response = await fetch("/shorten", {
+            method: "POST",
+            body: new URLSearchParams({ url })
+        });
+
+        if (response.ok) {
+            const shortenedURL = await response.text();
+            shortenedLink.querySelector("a").href = shortenedURL;
+            shortenedLink.querySelector("a").textContent = shortenedURL;
+        } else {
+            shortenedLink.querySelector("a").textContent = "Произошла ошибка при сокращении ссылки.";
+        }
+    });
+
+    function isValidURL(string) {
+        try {
+            new URL(string);
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+</script>
+</body>
+</html>

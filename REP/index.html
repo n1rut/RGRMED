@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Short URL Report</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0-alpha1/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1.0.0"></script>
+  <style>
+    .chart-container {
+      width: 80%; 
+      margin: 0 auto; 
+      height: 700px; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="text-center mb-4">Short URL Report</h1>
+
+    <form id="shortUrlForm" class="row mb-3">
+      <div class="col-md-8">
+        <input type="text" id="shortUrl" name="shortUrl" class="form-control" maxlength="6" placeholder="Enter Short URL (6 characters)" required>
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">Get Report</button>
+      </div>
+    </form>
+
+    <div class="chart-container">
+      <canvas id="reportChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('shortUrlForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const shortUrl = document.getElementById('shortUrl').value;
+
+      try {
+        const response = await fetch(`/report?short_url=${shortUrl}`);
+        if (!response.ok) {
+          throw new Error(`Network response was not ok (${response.status}: ${response.statusText})`);
+        }
+        const data = await response.json();
+
+        const countsByDay = data.reduce((acc, entry) => {
+          const date = moment(entry.TimeInterval).format('YYYY-MM-DD');
+          acc[date] = (acc[date] || 0) + entry.Count;
+          return acc;
+        }, {});
+
+        const chartData = {
+          labels: Object.keys(countsByDay),
+          datasets: [{
+            label: 'Number of Clicks',
+            data: Object.values(countsByDay),
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false,
+            tension: 0.4 
+          }]
+        };
+
+        const chartOptions = {
+          scales: {
+            x: {
+              type: 'time',
+              time: { unit: 'day' },
+              title: { display: true, text: 'Date' }
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Clicks' }
+            }
+          },
+          animation: true,
+          onHover: (event, chartElement) => {
+            event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+          } 
+        };
+
+        const ctx = document.getElementById('reportChart').getContext('2d');
+
+        if (window.myChart) {
+          window.myChart.destroy(); 
+        }
+
+        window.myChart = new Chart(ctx, {
+          type: 'line',
+          data: chartData,
+          options: chartOptions
+        });
+      } catch (error) {
+        console.error('Error fetching or processing data:', error);
+        alert('An error occurred. Please try again later.');
+      }
+    });
+  </script>
+</body>
+</html>
