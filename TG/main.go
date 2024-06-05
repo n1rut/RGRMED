@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	botToken      = "6896962024:AAHGF6M47rmMx-zRHG63aYhfAciB3L_8oDQ" // Замените на ваш токен бота
+	botToken      = "/////////"
 	shortenerHost = "172.17.2.214"
 	shortenerPort = "9111"
 	logFile       = "logs.log"
